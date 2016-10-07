@@ -20,6 +20,7 @@ import com.google.api.services.calendar.model.Events;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.List;
 
@@ -137,7 +138,6 @@ public class GoogleCalendar {
                 .execute();
         System.out.println(events.getSummary());
         List<Event> items = events.getItems();
-        System.out.println("Summary: " + items.get(0).getSummary());
         if (items.size() == 0) {
             System.out.println("No upcoming events found.");
         } else {
@@ -150,5 +150,31 @@ public class GoogleCalendar {
                 System.out.printf("%s (%s)\n", event.getSummary(), start);
             }
         }
+    }
+
+    public String parseDateTime(DateTime dateTime) {
+        char[] dateTimeArr = dateTime.toString().toCharArray();
+        char[] year = new char[4];
+        char[] month = new char[2];
+        char[] day = new char[2];
+        char[] time = new char[8];
+        for (int i = 0; i < 10; i++) {
+            if (i < 4)
+                year[i] = dateTimeArr[i];
+            else if (i > 4 && i < 7)
+                month[i - 5] = dateTimeArr[i];
+            else if (i > 7 && i < 10)
+                day[i - 8] = dateTimeArr[i];
+        }
+        for (int i = 11; i < 19; i++)
+            time[i-11] = dateTimeArr[i];
+
+        String timeStr = new String(time);
+        String yearStr = new String(year);
+        String monthStr = new String(month);
+        String dayStr = new String(day);
+        String timeAndDate = dayStr + "/" + monthStr + "/" + yearStr + " at " + timeStr;
+
+        return timeAndDate;
     }
 }

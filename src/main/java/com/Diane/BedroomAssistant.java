@@ -1,5 +1,6 @@
 package com.Diane;
 
+import com.google.api.client.googleapis.apache.GoogleApacheHttpTransport;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.Event;
@@ -119,7 +120,7 @@ public class BedroomAssistant extends PApplet {
         } else {
             for (int i = 0; i < bus.getNumLines(); i++) {
                 for (int j = 0; j < 4; j++) {
-                    text(bus.getBusInfo(i, j) + " ", 150 + 200*j, height - 500 + 22*i);
+                    text(bus.getBusInfo(i, j) + " ", 150 + 200*j, height - 300 + 22*i);
                 }
             }
         }
@@ -194,7 +195,7 @@ public class BedroomAssistant extends PApplet {
                 if (start == null) {
                     start = event.getStart().getDate();
                 }
-                text(event.getSummary() + "\t" + start, 200, 200);
+                text(event.getSummary() + "     " + calendar.parseDateTime(start), 200, 200);
             }
         }
     }
