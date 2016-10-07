@@ -1,10 +1,15 @@
 package com.Diane;
 
+import com.google.api.client.util.DateTime;
+import com.google.api.services.calendar.Calendar;
+import com.google.api.services.calendar.model.Event;
+import com.google.api.services.calendar.model.Events;
 import processing.core.PApplet;
 import processing.core.PFont;
 import processing.core.PImage;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Created by pedro on 05-10-2016.
@@ -14,6 +19,7 @@ public class BedroomAssistant extends PApplet {
     private TimeAndDate timeAndDate = new TimeAndDate();
     private Bus bus = new Bus();
     private Weather weather = new Weather();
+    private GoogleCalendar calendar = new GoogleCalendar();
 
     // Text font
     private PFont font;
@@ -55,6 +61,7 @@ public class BedroomAssistant extends PApplet {
             bus.sendMail(mailAuth, "sms@carris.pt", "C 07413", "Shut up Cesar!");
             bus.readEmail(mailAuth);
             weather.getWeather();
+            calendar.loadEvents("IST", 5);
         } catch (IOException ex) {
             System.err.print(ex);
         }
@@ -69,6 +76,7 @@ public class BedroomAssistant extends PApplet {
         drawTimeAndDate(timeAndDate);
         drawBusTimetable(bus);
         drawWeather(weather);
+        drawUpcomingEvents(calendar);
     }
 
     public void drawTimeAndDate(TimeAndDate timeAndDate) {
@@ -105,13 +113,13 @@ public class BedroomAssistant extends PApplet {
     public void drawBusTimetable(Bus bus) {
         textFont(font, 22);
         fill(textColor);
-        text("Last request: " + bus.getlastRequestTime(), 150, 630);
+        text("Last request: " + bus.getlastRequestTime(), 150, height - 20);
         if (bus.getNoBuses()) {
             text("No buses available.", 150, 370);
         } else {
             for (int i = 0; i < bus.getNumLines(); i++) {
                 for (int j = 0; j < 4; j++) {
-                    text(bus.getBusInfo(i, j) + " ", 150 + 200*j, 370 + 22*i);
+                    text(bus.getBusInfo(i, j) + " ", 150 + 200*j, height - 500 + 22*i);
                 }
             }
         }
@@ -167,6 +175,27 @@ public class BedroomAssistant extends PApplet {
         } else if (weather.getState().contains("Aguaceiros fracos")) {
             image(Lightrain, width-200, 100);
             text("Light Rain",width-170,180);
+        }
+    }
+
+    public void drawUpcomingEvents(GoogleCalendar calendar) {
+        Events events = calendar.getEvents();
+
+        textFont(font, 22);
+        fill(textColor);
+        List<Event> items = events.getItems();
+
+        if (items.size() == 0) {
+            System.out.println("No upcoming events found.");
+        } else {
+            text("Upcoming events: ", 200, 150);
+            for (Event event : items) {
+                DateTime start = event.getStart().getDateTime();
+                if (start == null) {
+                    start = event.getStart().getDate();
+                }
+                text(event.getSummary() + "\t" + start, 200, 200);
+            }
         }
     }
 }
