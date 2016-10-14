@@ -20,7 +20,10 @@ public class BedroomAssistant extends PApplet {
     private TimeAndDate timeAndDate = new TimeAndDate();
     private Bus bus = new Bus();
     private Weather weather = new Weather();
-    private GoogleCalendar calendar = new GoogleCalendar();
+    private GoogleCalendar classes = new GoogleCalendar();
+    private GoogleCalendar tests = new GoogleCalendar();
+
+    private boolean endOfDay = false;
 
     // Text font
     private PFont font;
@@ -62,7 +65,8 @@ public class BedroomAssistant extends PApplet {
             bus.sendMail(mailAuth, "sms@carris.pt", "C 07413", "Shut up Cesar!");
             bus.readEmail(mailAuth);
             weather.getWeather();
-            calendar.loadEvents("IST", 5);
+            classes.loadEvents("Classes", 5);
+            tests.loadEvents("Tests and Exams", 5);
         } catch (IOException ex) {
             System.err.print(ex);
         }
@@ -75,9 +79,20 @@ public class BedroomAssistant extends PApplet {
         stroke(255);
         timeAndDate.setTimeAndDate();
         drawTimeAndDate(timeAndDate);
-        drawBusTimetable(bus);
+        drawBusTimetable(bus, 5);
         drawWeather(weather);
-        drawUpcomingEvents(calendar);
+        if (hour() == 18) {
+            endOfDay = true;
+            try {
+                classes.loadEvents("Classes", 5);
+            } catch (IOException ex) {
+                System.err.print(ex);
+            }
+        }
+        if (hour() > 24 && hour() < 18)
+            endOfDay = false;
+        drawUpcomingEvents(classes, 20, 300, 130);
+        drawUpcomingEvents(tests, 500, 300, 290);
     }
 
     public void drawTimeAndDate(TimeAndDate timeAndDate) {
@@ -111,16 +126,18 @@ public class BedroomAssistant extends PApplet {
         text(dateString, 20, 170);
     }
 
-    public void drawBusTimetable(Bus bus) {
+    public void drawBusTimetable(Bus bus, int numBuses) {
         textFont(font, 22);
         fill(textColor);
         text("Last request: " + bus.getlastRequestTime(), 150, height - 20);
         if (bus.getNoBuses()) {
             text("No buses available.", 150, 370);
         } else {
-            for (int i = 0; i < bus.getNumLines(); i++) {
+            if (numBuses == 0)
+                numBuses = bus.getNumLines();
+            for (int i = 0; i < numBuses; i++) {
                 for (int j = 0; j < 4; j++) {
-                    text(bus.getBusInfo(i, j) + " ", 150 + 200*j, height - 300 + 22*i);
+                    text(bus.getBusInfo(i, j) + " ", 150 + 200*j, height - 100 + 22*i);
                 }
             }
         }
@@ -179,23 +196,44 @@ public class BedroomAssistant extends PApplet {
         }
     }
 
-    public void drawUpcomingEvents(GoogleCalendar calendar) {
+    public void drawUpcomingEvents(GoogleCalendar calendar, int width, int height, int dateSpace) {
         Events events = calendar.getEvents();
+
+        String title = "";
+        if (events.getSummary().contains("Classes"))
+            if (endOfDay && hour() < 24)
+                title = "Tomorrow's classes";
+            else
+                title = "Today's classes";
+        else
+            title = "Important dates";
 
         textFont(font, 22);
         fill(textColor);
         List<Event> items = events.getItems();
-
+        int i = 0;
         if (items.size() == 0) {
-            System.out.println("No upcoming events found.");
+            String noEvents = "";
+            if (title.contains("Tomorrow"))
+                noEvents = "No classes tomorrow!";
+            else if (title.contains("Today"))
+                noEvents = "No classes today!";
+            textFont(font, 26);
+            text(noEvents, width, height - 50);
         } else {
-            text("Upcoming events: ", 200, 150);
+            text(title, width, height - 50);
             for (Event event : items) {
                 DateTime start = event.getStart().getDateTime();
                 if (start == null) {
                     start = event.getStart().getDate();
                 }
-                text(event.getSummary() + "     " + calendar.parseDateTime(start), 200, 200);
+                textFont(font, 22);
+                fill(textColor);
+                text(event.getSummary(), width, height + 28*i);
+                textFont(font, 18);
+                fill(textColor);
+                text(calendar.parseDateTime(start), width + dateSpace, height + 28*i);
+                i++;
             }
         }
     }

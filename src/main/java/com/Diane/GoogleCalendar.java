@@ -108,13 +108,12 @@ public class GoogleCalendar {
                 .build();
     }
 
-    public void loadEvents(String calendarName, int numEvents) throws IOException {
+    public void loadEvents(String calendarName, int numMaxEvents) throws IOException {
         com.google.api.services.calendar.Calendar service =
                 getCalendarService();
 
-        // List the next 10 events from the primary calendar.
         DateTime now = new DateTime(System.currentTimeMillis());
-
+        DateTime endOfNextDay = new DateTime(System.currentTimeMillis() + 86400000);
         String pageToken = "";
         String calendarID = "";
         do {
@@ -131,11 +130,21 @@ public class GoogleCalendar {
         } while (pageToken != null);
 
          events = service.events().list(calendarID)
-                .setMaxResults(numEvents)
+                .setMaxResults(numMaxEvents)
                 .setTimeMin(now)
                 .setOrderBy("startTime")
                 .setSingleEvents(true)
                 .execute();
+
+        if (calendarName.equalsIgnoreCase("Classes"))
+            events = service.events().list(calendarID)
+                    .setMaxResults(numMaxEvents)
+                    .setTimeMin(now)
+                    .setTimeMax(endOfNextDay)
+                    .setOrderBy("startTime")
+                    .setSingleEvents(true)
+                    .execute();
+
         System.out.println(events.getSummary());
         List<Event> items = events.getItems();
         if (items.size() == 0) {
@@ -147,9 +156,55 @@ public class GoogleCalendar {
                 if (start == null) {
                     start = event.getStart().getDate();
                 }
+                if (calendarName.equalsIgnoreCase("Classes")) renameClasses(event);
+                if (calendarName.equalsIgnoreCase("Tests and Exams")) renameTestsAndExams(event);
                 System.out.printf("%s (%s)\n", event.getSummary(), start);
             }
         }
+    }
+
+    private void renameClasses(Event event) {
+        String eventSummary = "";
+        if (event.getSummary().contains("Sistemas"))
+            eventSummary = "STVR";
+        else if (event.getSummary().contains("Teoria"))
+            eventSummary = "TCom";
+        else if (event.getSummary().contains("Empreendedorismo"))
+            eventSummary = "EITT";
+        else if (event.getSummary().contains("Aprendizagem"))
+            eventSummary = "AA";
+
+        if (event.getSummary().contains("Teórica"))
+            eventSummary = eventSummary.concat(" (T)");
+        else if (event.getSummary().contains("Problemas"))
+            eventSummary = eventSummary.concat(" (P)");
+        else if (event.getSummary().contains("Lab"))
+            eventSummary = eventSummary.concat(" (L)");
+
+        event.setSummary(eventSummary);
+    }
+
+    private void renameTestsAndExams(Event event) {
+        String eventSummary = "";
+        if (event.getSummary().contains("STVR25179"))
+            eventSummary = event.getSummary().replaceAll("STVR25179", "STVR");
+        else if (event.getSummary().contains("TComu5179"))
+            eventSummary = event.getSummary().replaceAll("TComu5179", "TCom");
+        else if (event.getSummary().contains("AAut25179"))
+            eventSummary = event.getSummary().replaceAll("AAut25179", "AA");
+
+        eventSummary = eventSummary.replaceAll(" :", ":");
+        eventSummary = eventSummary.replaceAll("1º", "1st");
+        eventSummary = eventSummary.replaceAll("1ª", "1st");
+        eventSummary = eventSummary.replaceAll("2º", "2nd");
+        eventSummary = eventSummary.replaceAll("Teste", "Test");
+        eventSummary = eventSummary.replaceAll("Exame", "Exam");
+        eventSummary = eventSummary.replaceAll("Época", "Epoch");
+
+        if (eventSummary.contains("Aula"))
+            eventSummary = eventSummary.replaceAll(" - Aula", "");
+
+        event.setSummary(eventSummary);
     }
 
     public String parseDateTime(DateTime dateTime) {
@@ -157,7 +212,7 @@ public class GoogleCalendar {
         char[] year = new char[4];
         char[] month = new char[2];
         char[] day = new char[2];
-        char[] time = new char[8];
+        char[] time = new char[5];
         for (int i = 0; i < 10; i++) {
             if (i < 4)
                 year[i] = dateTimeArr[i];
@@ -166,7 +221,7 @@ public class GoogleCalendar {
             else if (i > 7 && i < 10)
                 day[i - 8] = dateTimeArr[i];
         }
-        for (int i = 11; i < 19; i++)
+        for (int i = 11; i < 16; i++)
             time[i-11] = dateTimeArr[i];
 
         String timeStr = new String(time);
