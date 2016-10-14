@@ -79,7 +79,7 @@ public class BedroomAssistant extends PApplet {
         stroke(255);
         timeAndDate.setTimeAndDate();
         drawTimeAndDate(timeAndDate);
-        drawBusTimetable(bus, 5);
+        drawBusTimetable(bus, 5, 90, 520);
         drawWeather(weather);
         if (hour() == 18) {
             endOfDay = true;
@@ -126,20 +126,20 @@ public class BedroomAssistant extends PApplet {
         text(dateString, 20, 170);
     }
 
-    public void drawBusTimetable(Bus bus, int numBuses) {
+    public void drawBusTimetable(Bus bus, int numBuses, int width, int height) {
         textFont(font, 22);
         fill(textColor);
-        text("Last request: " + bus.getlastRequestTime(), 150, height - 20);
         if (bus.getNoBuses()) {
-            text("No buses available.", 150, 370);
+            text("No buses available.", width, height);
         } else {
-            if (numBuses == 0)
+            if (numBuses == 0 || bus.getNumLines() - 1 < numBuses)
                 numBuses = bus.getNumLines();
             for (int i = 0; i < numBuses; i++) {
                 for (int j = 0; j < 4; j++) {
-                    text(bus.getBusInfo(i, j) + " ", 150 + 200*j, height - 100 + 22*i);
+                    text(bus.getBusInfo(i, j) + " ", width + 200*j, height + 28*i);
                 }
             }
+            text("Last request: " + bus.getlastRequestTime(), width, height + 60*numBuses);
         }
     }
 
