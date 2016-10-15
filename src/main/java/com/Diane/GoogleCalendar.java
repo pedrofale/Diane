@@ -185,7 +185,7 @@ public class GoogleCalendar {
     }
 
     private void renameTestsAndExams(Event event) {
-        String eventSummary = "";
+        String eventSummary = event.getSummary();
         if (event.getSummary().contains("STVR25179"))
             eventSummary = event.getSummary().replaceAll("STVR25179", "STVR");
         else if (event.getSummary().contains("TComu5179"))
@@ -221,14 +221,19 @@ public class GoogleCalendar {
             else if (i > 7 && i < 10)
                 day[i - 8] = dateTimeArr[i];
         }
-        for (int i = 11; i < 16; i++)
-            time[i-11] = dateTimeArr[i];
 
-        String timeStr = new String(time);
         String yearStr = new String(year);
         String monthStr = new String(month);
         String dayStr = new String(day);
-        String timeAndDate = dayStr + "/" + monthStr + "/" + yearStr + " at " + timeStr;
+
+        String timeStr = "";
+        String timeAndDate = dayStr + "/" + monthStr + "/" + yearStr;
+        if (!dateTime.isDateOnly()) {
+            for (int i = 11; i < 16; i++)
+                time[i - 11] = dateTimeArr[i];
+            timeStr = new String(time);
+            timeAndDate = timeAndDate.concat(" at " + timeStr);
+        }
 
         return timeAndDate;
     }
